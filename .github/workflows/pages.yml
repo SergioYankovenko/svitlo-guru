@@ -22,21 +22,6 @@ jobs:
     outputs:
       changed: ${{ steps.prepare.outputs.changed }}
     steps:
-      - name: Enable HTTPS when the domain certificate is ready
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          pages="$(gh api "repos/$GITHUB_REPOSITORY/pages")"
-          if jq -e '.https_enforced == false' <<< "$pages" > /dev/null; then
-            gh api "repos/$GITHUB_REPOSITORY/pages/health" --silent
-            pages="$(gh api "repos/$GITHUB_REPOSITORY/pages")"
-          fi
-          if jq -e '.https_certificate.state == "approved" and .https_enforced == false' <<< "$pages" > /dev/null; then
-            gh api --method PUT "repos/$GITHUB_REPOSITORY/pages" -F https_enforced=true --silent
-            echo "HTTPS enforcement enabled."
-          else
-            echo "HTTPS is already enabled or the domain certificate is still being prepared."
-          fi
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
