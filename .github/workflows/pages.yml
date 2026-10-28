@@ -1,0 +1,57 @@
+name: Publish svitlo.guru
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.prepare.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Read the existing public release source
+        uses: actions/checkout@v4
+        with:
+          repository: SergioYankovenko/svitlo
+          ref: main
+          path: upstream
+          persist-credentials: false
+      - name: Prepare the domain publication
+        id: prepare
+        run: python3 scripts/prepare-site.py upstream site
+      - name: Configure Pages
+        if: steps.prepare.outputs.changed == 'true'
+        uses: actions/configure-pages@v5
+      - name: Upload the website
+        if: steps.prepare.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy the website
+        id: deployment
+        uses: actions/deploy-pages@v5
