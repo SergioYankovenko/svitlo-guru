@@ -11,7 +11,9 @@ It does not build or modify the app, change its API URL, or deploy any backend.
 
 GitHub Actions checks the original main branch every 15 minutes. Scheduled runs
 skip publication when the deployed source and publication pipeline are unchanged.
-Each run also enables HTTPS enforcement once GitHub approves the domain certificate.
+Each run also checks DNS health and enables HTTPS enforcement once GitHub approves
+the domain certificate. Scheduled runs are subject to GitHub Actions scheduling
+and inactivity rules; the workflow can be re-enabled from the Actions tab.
 Use Actions → Publish svitlo.guru → Run workflow for an immediate refresh.
 `deployment-source.json` records both source and publication commit hashes.
 
