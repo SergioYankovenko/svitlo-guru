@@ -35,7 +35,12 @@ def main():
 
     if changed:
         destination.mkdir(parents=True, exist_ok=True)
-        for name in ("index.html", "assets", "app", "downloads", "update.json"):
+        names = ["index.html", "assets", "app", "downloads", "update.json"]
+        names.extend(
+            name for name in ("license.html", "LICENSE", "NOTICE", "LICENSING.md", "LICENSES")
+            if (upstream / name).exists()
+        )
+        for name in names:
             source = upstream / name
             if source.is_dir():
                 shutil.copytree(source, destination / name, dirs_exist_ok=True)
@@ -43,13 +48,15 @@ def main():
                 shutil.copy2(source, destination / name)
         (destination / ".nojekyll").touch()
         (destination / "CNAME").write_text("svitlo.guru\n", encoding="utf-8")
-        index = destination / "index.html"
-        index.write_text(
-            index.read_text(encoding="utf-8").replace(
-                "https://sergioyankovenko.github.io/svitlo/", "https://svitlo.guru/"
-            ),
-            encoding="utf-8",
-        )
+        for name in ("index.html", "license.html"):
+            page = destination / name
+            if page.exists():
+                page.write_text(
+                    page.read_text(encoding="utf-8").replace(
+                        "https://sergioyankovenko.github.io/svitlo/", "https://svitlo.guru/"
+                    ),
+                    encoding="utf-8",
+                )
         (destination / "deployment-source.json").write_text(
             json.dumps(version, indent=2) + "\n", encoding="utf-8"
         )
